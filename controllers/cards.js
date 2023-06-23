@@ -36,7 +36,7 @@ module.exports.deleteCard = (req, res) => {
       return res.status(200).send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res.status(400).send({ message: 'Bad request' });
       } else {
         res.status(500).send({ message: 'Internal server error' });
