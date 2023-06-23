@@ -33,13 +33,13 @@ module.exports.getUserById = (req, res) => {
     .findById(userId)
     .then((user) => res.send(user))
     .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Bad Request' });
+      }
+
       if (err.name === 'DocumentNotFoundError') {
         return res.status(404)
           .send({ message: 'Not found' });
-      }
-
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Bad Request' });
       }
 
       return res.status(500).send({ message: 'Internal Server Error' });
