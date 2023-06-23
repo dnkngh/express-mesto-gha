@@ -82,7 +82,7 @@ module.exports.deleteLike = (req, res) => {
       return res.status(200).send(card);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || 'CastError') {
         return res.status(400).send({ message: 'Bad request' });
       }
 

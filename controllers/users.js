@@ -38,8 +38,7 @@ module.exports.getUserById = (req, res) => {
       }
 
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404)
-          .send({ message: 'Not found' });
+        return res.status(404).send({ message: 'Not found' });
       }
 
       return res.status(500).send({ message: 'Internal Server Error' });
