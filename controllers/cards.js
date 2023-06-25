@@ -1,10 +1,12 @@
+const status = require('http2').constants;
 const cardSchema = require('../models/card');
 
 module.exports.getCards = (req, res) => {
   cardSchema
     .find({})
-    .then((cards) => res.status(200).send(cards))
-    .catch(() => res.status(500).send({ message: 'Internal server error' }));
+    .then((cards) => res.send(cards))
+    .catch(() => res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+      .send({ message: 'Internal server error' }));
 };
 
 module.exports.createCard = (req, res) => {
@@ -16,9 +18,11 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.status(201).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Bad request' });
+        res.status(status.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Bad request' });
       } else {
-        res.status(500).send({ message: 'Internal server error' });
+        res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+          .send({ message: 'Internal server error' });
       }
     });
 };
@@ -30,16 +34,19 @@ module.exports.deleteCard = (req, res) => {
     .findByIdAndRemove(cardId)
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Not found' });
+        return res.status(status.HTTP_STATUS_NOT_FOUND)
+          .send({ message: 'Not found' });
       }
 
-      return res.status(200).send(card);
+      return res.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Bad request' });
+        res.status(status.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Bad request' });
       } else {
-        res.status(500).send({ message: 'Internal server error' });
+        res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+          .send({ message: 'Internal server error' });
       }
     });
 };
@@ -53,17 +60,20 @@ module.exports.addLike = (request, response) => {
     )
     .then((card) => {
       if (!card) {
-        return response.status(404).send({ message: 'Not found' });
+        return response.status(status.HTTP_STATUS_NOT_FOUND)
+          .send({ message: 'Not found' });
       }
 
-      return response.status(200).send(card);
+      return response.send(card);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return response.status(400).send({ message: 'Bad request' });
+        return response.status(status.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Bad request' });
       }
 
-      return response.status(500).send({ message: 'Internal server error' });
+      return response.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'Internal server error' });
     });
 };
 
@@ -76,16 +86,19 @@ module.exports.deleteLike = (req, res) => {
     )
     .then((card) => {
       if (!card) {
-        return res.status(404).send({ message: 'Not found' });
+        return res.status(status.HTTP_STATUS_NOT_FOUND)
+          .send({ message: 'Not found' });
       }
 
-      return res.status(200).send(card);
+      return res.send(card);
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        return res.status(400).send({ message: 'Bad request' });
+        return res.status(status.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Bad request' });
       }
 
-      return res.status(500).send({ message: 'Internal server error' });
+      return res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'Internal server error' });
     });
 };
