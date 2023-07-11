@@ -48,7 +48,7 @@ module.exports.createUser = (req, res, next) => {
             return next(new AlreadyTaken('This email has already been registrred'));
           }
           if (err.name === 'ValidationError') {
-            return next(new BadRequest('Bad request'));
+            return next(new BadRequest('Bad request9'));
           }
           return next(err);
         });
