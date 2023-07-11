@@ -21,6 +21,15 @@ app.use(auth);
 app.use(router);
 app.use(errors());
 
+app.use((error, req, res, next) => {
+  const { status = 500, message } = error;
+
+  res.status(status).send({
+    message: status === 500 ? 'Ошибка сервера' : message,
+  });
+  next();
+});
+
 app.listen(PORT, () => {
   console.log(`# Listening port ${PORT}`);
 });
