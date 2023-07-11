@@ -1,83 +1,76 @@
 const status = require('http2').constants;
-const cardSchema = require('../models/card');
 
-module.exports.getCards = (req, res) => {
+const cardSchema = require('../models/card');
+const BadRequest = require('../middlewares/errors/BadRequest');
+const InternalServerError = require('../middlewares/errors/InternalServerError');
+const NotFound = require('../middlewares/errors/NotFound');
+const Forbidden = require('../middlewares/errors/Forbidden');
+
+module.exports.getCards = (req, res, next) => {
   cardSchema
     .find({})
-    .then((cards) => res.send(cards))
-    .catch(() => res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: 'Internal server error' }));
+    .then((cards) => res.status(status.HTTP_STATUS_OK).send(cards))
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   cardSchema
     .create({ name, link, owner })
-    .then((card) => res.status(201).send(card))
+    .then((card) => res.status(status.HTTP_STATUS_CREATED).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(status.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Bad request' });
+        next(new BadRequest('Bad request'));
       } else {
-        res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Internal server error' });
+        next(new InternalServerError('Internal server error'));
       }
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   cardSchema
     .findByIdAndRemove(cardId)
     .then((card) => {
       if (!card) {
-        return res.status(status.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Not found' });
+        throw new NotFound('Not found');
       }
 
-      return res.send(card);
-    })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(status.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Bad request' });
-      } else {
-        res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Internal server error' });
+      if (!card.owner.equals(req.user._id)) {
+        return next(new Forbidden('Forbidden'));
       }
-    });
+
+      return card.deleteOne().then(() => res.send({ message: 'Карточка удалена' }));
+    })
+    .catch(next);
 };
 
-module.exports.addLike = (request, response) => {
+module.exports.addLike = (req, res, next) => {
   cardSchema
     .findByIdAndUpdate(
-      request.params.cardId,
-      { $addToSet: { likes: request.user._id } },
+      req.params.cardId,
+      { $addToSet: { likes: req.user._id } },
       { new: true },
     )
     .then((card) => {
       if (!card) {
-        return response.status(status.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Not found' });
+        throw new NotFound('Not found');
       }
 
-      return response.send(card);
+      res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return response.status(status.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Bad request' });
+        return next(new BadRequest('Bad request'));
       }
-
-      return response.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: 'Internal server error' });
+      return next(err);
     });
 };
 
-module.exports.deleteLike = (req, res) => {
+module.exports.deleteLike = (req, res, next) => {
   cardSchema
     .findByIdAndUpdate(
       req.params.cardId,
@@ -86,19 +79,14 @@ module.exports.deleteLike = (req, res) => {
     )
     .then((card) => {
       if (!card) {
-        return res.status(status.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Not found' });
+        throw new NotFound('Not found');
       }
-
-      return res.send(card);
+      res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        return res.status(status.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Bad request' });
+        return next(new BadRequest('Bad request'));
       }
-
-      return res.status(status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: 'Internal server error' });
+      return next(err);
     });
 };
