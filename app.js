@@ -1,34 +1,26 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
 const { errors } = require('celebrate');
 const router = require('./routes/router');
 
 const auth = require('./middlewares/auth');
-const { createUser, login } = require('./controllers/users');
-const { createUserValidation, loginValidation } = require('./middlewares/validation');
+const errorHandler = require('./middlewares/errors/errorHandler');
 
-const { PORT = 3000 } = process.env;
+const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 const app = express();
 
-mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
+mongoose.connect(DB_URL);
 
 app.use(express.json());
 
-app.use('/signin', loginValidation, login);
-app.post('/signup', createUserValidation, createUser);
+app.use(helmet());
+app.disable('x-powered-by');
 
 app.use(auth);
 app.use(router);
 app.use(errors());
-
-app.use((error, req, res, next) => {
-  const { status = 500, message } = error;
-
-  res.status(status).send({
-    message: status === 500 ? 'Ошибка сервера' : message,
-  });
-  next();
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`# Listening port ${PORT}`);

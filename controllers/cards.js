@@ -33,7 +33,8 @@ module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   cardSchema
-    .findByIdAndRemove(cardId)
+    .findById(cardId)
+    .orFail()
     .then((card) => {
       if (!card) {
         throw new NotFound('Not found');

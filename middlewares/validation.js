@@ -10,15 +10,6 @@ const urlValidation = (url) => {
   throw new BadRequest('Bad request');
 };
 
-const IdValidation = (id) => {
-  const regex = /^[0-9a-fA-F]{24}$/;
-
-  if (regex.test(id)) {
-    return id;
-  }
-  throw new BadRequest('Bad request');
-};
-
 module.exports.loginValidation = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
@@ -45,13 +36,13 @@ module.exports.updateUserValidation = celebrate({
 
 module.exports.userIdValidation = celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().required().custom(IdValidation),
+    userId: Joi.string().hex().length(24).required(),
   }),
 });
 
 module.exports.cardByIdValidation = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().required().custom(IdValidation),
+    cardId: Joi.string().hex().length(24).required(),
   }),
 });
 
